@@ -271,12 +271,13 @@ class Show(View):
         if not search_count:
             return None
 
-        package_name = package_name.lower().replace('-', '_')
+        # package_name = package_name.lower().replace('-', '_')
         search_result = [
             pkg
             for pkg in search_result
             if pkg['name'].lower() == package_name or
-            pkg['name'].lower().replace('-', '_') == package_name
+            pkg['name'].lower().replace('-', '_') == package_name or
+            pkg['name'].lower().replace('-', '.') == package_name
             ]
         log.debug('Found %s, matched %s',
                   search_count, len(search_result))
@@ -298,6 +299,8 @@ class Show(View):
         pkg = Package.by_name(self.session, package_name)
         if pkg is None:
             pkg = Package.by_name(self.session, package_name.replace('-', '_'))
+        if pkg is None:
+            pkg = Package.by_name(self.session, package_name.replace('-', '.'))
 
         refresh = True
         session_users = {}
@@ -325,6 +328,10 @@ class Show(View):
                 pkg_info = self._search_package(package_name)
                 if not pkg_info and '-' in package_name:
                     tmp_name = package_name.replace('-', '_')
+                    pkg_info = self._search_package(tmp_name)
+
+                if not pkg_info and '-' in package_name:
+                    tmp_name = package_name.replace('-', '.')
                     pkg_info = self._search_package(tmp_name)
 
                 if not pkg_info and '_' in package_name:
